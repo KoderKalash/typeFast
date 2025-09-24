@@ -5,7 +5,7 @@ export default function Home() {
         <main className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8">
             <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl font-bold mb-6 text-slate-900 dark:text-white">
-                    type<span className="text-red-500">Fast</span> 
+                    type<span className="text-yellow-500">Fast</span> 
                 </h1>
                 <Display />
             </div>
