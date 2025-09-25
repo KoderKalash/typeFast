@@ -1,5 +1,6 @@
 "use client"
 import Display from "@/components/passagedisplay"
+import History from "@/components/history"
 export default function Home() {
     return (
         <main className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8">
@@ -8,6 +9,7 @@ export default function Home() {
                     type<span className="text-yellow-500">Fast</span> 
                 </h1>
                 <Display />
+                <History />
             </div>
         </main>
     )
