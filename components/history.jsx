@@ -26,8 +26,13 @@ export default function History() {
         <ul className="space-y-2">
           {results.map((r, idx) => (
             <li key={idx} className="flex justify-between text-sm">
-              <span>{r.date}</span>
-              <span>{r.wpm} WPM, {r.accuracy}%</span>
+              <div>
+                <span className="block text-gray-300">{r.date}</span>
+                <span className="block text-gray-300">Mode:{r.mode ? r.mode : "timed"}</span>
+              </div>
+              <div>
+                <span className="block">{r.wpm} WPM, {r.accuracy}%</span>
+              </div>
             </li>
           ))}
         </ul>

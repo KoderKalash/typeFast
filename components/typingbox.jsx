@@ -16,6 +16,9 @@ export default function TypingBox({ passage }) {
     const [isActive, setIsActive] = useState(false);
     const [accuracy, setAccuracy] = useState(0);
     const [showresults, setShowResults] = useState(false);
+    //mode toggle
+    const [mode, setMode] = useState("timed");
+
 
     useEffect(() => {
         if (!isActive) return;
@@ -68,6 +71,35 @@ export default function TypingBox({ passage }) {
         setAccuracy(calculateAccuracy(e.target.value, passage));
     }
 
+    const finishChill = () => {
+        const elapsed = (Date.now() - starttime) / 60000; // minutes
+        const words = input.trim().split(/\s+/).length;
+        const wpmNow = elapsed > 0 ? Math.round(words / elapsed) : 0;
+        const accNow = Math.round(
+            (passage
+                .split("")
+                .slice(0, input.length)
+                .filter((c, i) => c === input[i]).length /
+                input.length) * 100
+        );
+
+        // Save to localStorage
+        const result = {
+            date: new Date().toLocaleString(),
+            wpm: wpmNow,
+            accuracy: isNaN(accNow) ? 0 : accNow,
+        };
+
+        const prev = JSON.parse(localStorage.getItem("typingResults")) || [];
+        prev.push(result);
+        localStorage.setItem("typingResults", JSON.stringify(prev));
+
+        // Reset state
+        setIsActive(false);
+        setInput("");
+    };
+
+
 
 
     const restart = () => {
@@ -94,41 +126,80 @@ export default function TypingBox({ passage }) {
     }
 
     return (
-        <div className="mt-6">
-            <div className="flex justify-between mb-2"><span className="text-gray-700">
-                <strong>Time left:</strong>{timer}s</span>
-                <span className="text-gray-700">
-                    <strong>WPM:</strong> {isNaN(wpm) ? 0 : wpm}
-                </span>
-                <span className="text-gray-700">
-                    <strong>Accuracy:</strong> {isNaN(accuracy) ? 0 : accuracy}%
-                </span>
+        <div>
+            {/* Mode toggle buttons */}
+            <div className="mb-4 flex gap-3">
+                <button
+                    onClick={() => setMode("timed")}
+                    className={`px-4 py-2 rounded ${mode === "timed" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+                >
+                    Rush Mode
+                </button>
+                <button
+                    onClick={() => setMode("casual")}
+                    className={`px-4 py-2 rounded ${mode === "casual" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+                >
+                    Chill Mode
+                </button>
             </div>
+            {mode === "timed" ? (
+                // Timed Mode UI
+                <>
+                    <div className="flex justify-between mb-2">
+                        <span><strong>Time left:</strong> {timer}s</span>
+                        <span><strong>WPM:</strong> {isNaN(wpm) ? 0 : wpm}</span>
+                        <span><strong>Accuracy:</strong> {isNaN(accuracy) ? 0 : accuracy}%</span>
+                    </div>
 
-            <Highlightedpsg passage={passage} userInput={input} />
+                    <Highlightedpsg passage={passage} userInput={input} />
 
-            <textarea
-                className="w-full p-3 border rounded-lg mt-4"
-                rows="3"
-                value={input}
-                onChange={handleChange}
-                placeholder="Type here..." disabled={!isActive && starttime !== null && timer === 0} //diabling text area after time is up
-            />
+                    <textarea
+                        className="w-full p-3 border rounded-lg mt-4"
+                        rows="3"
+                        value={input}
+                        onChange={handleChange}
+                        placeholder="Type here..."
+                        disabled={mode === "timed" && !isActive && starttime !== null && timer === 0}
+                    />
 
-            <button onClick={restart}
-                className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:cursor-pointer">
-                Reset
-            </button>
+                    <button onClick={restart}
+                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded">
+                        Reset
+                    </button>
+                </>
+            ) : (
+                // Casual Mode UI
+                <>
+                    <div className="flex justify-between mb-2">
+                        <span><strong>WPM:</strong> {isNaN(wpm) ? 0 : wpm}</span>
+                        <span><strong>Accuracy:</strong> {isNaN(accuracy) ? 0 : accuracy}%</span>
+                    </div>
 
+                    <Highlightedpsg passage={passage} userInput={input} />
 
-            {showresults && (
-                <div className="mt-6 p-4 border rounded-lg bg-black text-center">
-                    <h2 className="text-xl font-semibold mb-4">Results</h2>
-                    <p><strong>WPM:</strong> {isNaN(wpm) ? 0 : wpm}</p>
-                    <p><strong>Accuracy:</strong> {isNaN(accuracy) ? 0 : accuracy}%</p>
-                    <p><strong>Characters Typed:</strong> {input.length}</p>
-                </div>
+                    <textarea
+                        className="w-full p-3 border rounded-lg mt-4"
+                        rows="3"
+                        value={input}
+                        onChange={handleChange}
+                        placeholder="Type here..."
+                    />
+
+                    <div className="mt-3 flex gap-3">
+                        <button onClick={finishChill} className="px-4 py-2 bg-blue-600 text-white rounded">
+                            Finish
+                        </button>
+                        <button onClick={restart} className="px-4 py-2 bg-green-600 text-white rounded">
+                            Reset
+                        </button>
+                    </div>
+                </>
             )}
         </div>
-    )
+    );
 }
+
+
+
+//add a delete history button
+//casual mode -> not endless
