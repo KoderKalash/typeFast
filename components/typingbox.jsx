@@ -3,9 +3,6 @@ import React, { useState, useEffect } from "react";
 import Highlightedpsg from "./highlightpsg";
 
 
-
-
-
 //import random from "@/data/passage";
 export default function TypingBox({ passage }) {
     const [input, setInput] = useState("");
@@ -21,27 +18,27 @@ export default function TypingBox({ passage }) {
 
 
     useEffect(() => {
+        if (mode !== "timed") return;
         if (!isActive) return;
+
         if (timer > 0) {
-            const t = setTimeout(() => { setTimer(timer - 1); }, 1000);
+            const t = setTimeout(() => setTimer(timer - 1), 1000);
             return () => clearTimeout(t);
         } else {
             setIsActive(false);
             setShowResults(true);
 
-            const newResult = {
+            // use latest values when saving
+            saveResults({
                 wpm,
                 accuracy,
                 characters: input.length,
                 date: new Date().toLocaleString(),
-            };
-
-            const prevResults = JSON.parse(localStorage.getItem("typingResults")) || [];
-            const updated = Array.isArray(prevResults) ? [...prevResults, newResult] : [newResult];
-
-            localStorage.setItem("typingResults", JSON.stringify(updated));
+                mode,
+            });
         }
-    }, [timer, isActive]);
+    }, [timer, isActive, mode]);
+
 
 
     //Accuracy Calculation 
@@ -60,62 +57,46 @@ export default function TypingBox({ passage }) {
             setStarttime(Date.now()) //timer starts at the first input
             setIsActive(true)
         }
-        if (!isActive) return; //block input when timer ends
+        if (mode === "timed" && (!isActive || timer === 0)) return; //block input when timer ends
         setInput(e.target.value);
 
         //calculating wpm
         const words = e.target.value.trim().split(" ").length
         const minutes = (Date.now() - starttime) / 1000 / 60
-        setWpm(Math.round(words / minutes))
+        setWpm(minutes > 0 ? Math.round(words / minutes) : 0)
 
         setAccuracy(calculateAccuracy(e.target.value, passage));
     }
 
-    const finishChill = () => {
-        const elapsed = (Date.now() - starttime) / 60000; // minutes
-        const words = input.trim().split(/\s+/).length;
-        const wpmNow = elapsed > 0 ? Math.round(words / elapsed) : 0;
-        const accNow = Math.round(
-            (passage
-                .split("")
-                .slice(0, input.length)
-                .filter((c, i) => c === input[i]).length /
-                input.length) * 100
-        );
+const saveResults = (override = null) => {
+    if (typeof window === "undefined") return; // ✅ guard for Next.js SSR
 
-        // Save to localStorage
-        const result = {
-            date: new Date().toLocaleString(),
-            wpm: wpmNow,
-            accuracy: isNaN(accNow) ? 0 : accNow,
-        };
-
-        const prev = JSON.parse(localStorage.getItem("typingResults")) || [];
-        prev.push(result);
-        localStorage.setItem("typingResults", JSON.stringify(prev));
-
-        // Reset state
-        setIsActive(false);
-        setInput("");
+    const newResult = override || {
+        wpm,
+        accuracy,
+        characters: input.length,
+        date: new Date().toLocaleString(),
+        mode,
     };
 
+    const prevResults = JSON.parse(localStorage.getItem("typingResults")) || [];
+    const updated = Array.isArray(prevResults) ? [...prevResults, newResult] : [newResult];
+
+    localStorage.setItem("typingResults", JSON.stringify(updated));
+    window.dispatchEvent(new Event("typingResultsUpdated")); // Add this line
+
+    console.log("✅ Saved:", newResult); // debug
+};
 
 
+
+    const finishChill = () => {
+        setIsActive(false)
+        saveResults()
+        setShowResults(true)
+    };
 
     const restart = () => {
-        if (starttime) {
-            const newResult = {
-                wpm,
-                accuracy,
-                characters: input.length,
-                date: new Date().toLocaleString(),
-            };
-
-            const prevResults = JSON.parse(localStorage.getItem("typingResults")) || [];
-            const updated = Array.isArray(prevResults) ? [...prevResults, newResult] : [newResult];
-
-            localStorage.setItem("typingResults", JSON.stringify(updated));
-        }
         setInput("")
         setWpm(0)
         setStarttime(null)
@@ -128,16 +109,17 @@ export default function TypingBox({ passage }) {
     return (
         <div>
             {/* Mode toggle buttons */}
-            <div className="mb-4 flex gap-3">
+            <div className="mb-4 mt-4 flex gap-3">
                 <button
                     onClick={() => setMode("timed")}
-                    className={`px-4 py-2 rounded ${mode === "timed" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "timed" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
                 >
                     Rush Mode
                 </button>
                 <button
                     onClick={() => setMode("casual")}
-                    className={`px-4 py-2 rounded ${mode === "casual" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "casual" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`
+                    }
                 >
                     Chill Mode
                 </button>
@@ -163,7 +145,7 @@ export default function TypingBox({ passage }) {
                     />
 
                     <button onClick={restart}
-                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded">
+                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring cursor-pointer">
                         Reset
                     </button>
                 </>
@@ -186,10 +168,10 @@ export default function TypingBox({ passage }) {
                     />
 
                     <div className="mt-3 flex gap-3">
-                        <button onClick={finishChill} className="px-4 py-2 bg-blue-600 text-white rounded">
+                        <button onClick={finishChill} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring cursor-pointer">
                             Finish
                         </button>
-                        <button onClick={restart} className="px-4 py-2 bg-green-600 text-white rounded">
+                        <button onClick={restart} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring cursor-pointer">
                             Reset
                         </button>
                     </div>
@@ -202,4 +184,3 @@ export default function TypingBox({ passage }) {
 
 
 //add a delete history button
-//casual mode -> not endless
