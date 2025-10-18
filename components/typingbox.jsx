@@ -1,186 +1,158 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Highlightedpsg from "./highlightpsg";
 
+import React, { useState, useEffect, useRef } from "react";
 
-//import random from "@/data/passage";
 export default function TypingBox({ passage }) {
-    const [input, setInput] = useState("");
-    const [starttime, setStarttime] = useState(null);
-    const [wpm, setWpm] = useState(0);
-    //30s timer
-    const [timer, setTimer] = useState(30);
-    const [isActive, setIsActive] = useState(false);
-    const [accuracy, setAccuracy] = useState(0);
-    const [showresults, setShowResults] = useState(false);
-    //mode toggle
-    const [mode, setMode] = useState("timed");
+  const [typed, setTyped] = useState("");
+  const [isActive, setIsActive] = useState(false);
+  const [stats, setStats] = useState({ wpm: 0, accuracy: 0, time: 0 });
+  const [testStarted, setTestStarted] = useState(false);
+  const [mode, setMode] = useState("timed");
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [testComplete, setTestComplete] = useState(false);
+  const inputRef = useRef(null);
+  const timerRef = useRef(null);
 
-
-    useEffect(() => {
-        if (mode !== "timed") return;
-        if (!isActive) return;
-
-        if (timer > 0) {
-            const t = setTimeout(() => setTimer(timer - 1), 1000);
-            return () => clearTimeout(t);
-        } else {
-            setIsActive(false);
-            setShowResults(true);
-
-            // use latest values when saving
-            saveResults({
-                wpm,
-                accuracy,
-                characters: input.length,
-                date: new Date().toLocaleString(),
-                mode,
-            });
-        }
-    }, [timer, isActive, mode]);
-
-
-
-    //Accuracy Calculation 
-    const calculateAccuracy = (input, passage) => {
-        let correct = 0;
-        for (let i = 0; i < input.length; i++) {
-            if (input[i] === passage[i]) {
-                correct++;
-            }
-        }
-        return input.length > 0 ? Math.round((correct / input.length) * 100) : 100;
-    };
-
-    const handleChange = (e) => {
-        if (!starttime && !isActive) {
-            setStarttime(Date.now()) //timer starts at the first input
-            setIsActive(true)
-        }
-        if (mode === "timed" && (!isActive || timer === 0)) return; //block input when timer ends
-        setInput(e.target.value);
-
-        //calculating wpm
-        const words = e.target.value.trim().split(" ").length
-        const minutes = (Date.now() - starttime) / 1000 / 60
-        setWpm(minutes > 0 ? Math.round(words / minutes) : 0)
-
-        setAccuracy(calculateAccuracy(e.target.value, passage));
+  useEffect(() => {
+    if (mode === "timed" && testStarted && timeLeft > 0 && !testComplete) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setTestComplete(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
 
-const saveResults = (override = null) => {
-    if (typeof window === "undefined") return; // ✅ guard for Next.js SSR
-
-    const newResult = override || {
-        wpm,
-        accuracy,
-        characters: input.length,
-        date: new Date().toLocaleString(),
-        mode,
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
+  }, [testStarted, mode, timeLeft, testComplete]);
 
-    const prevResults = JSON.parse(localStorage.getItem("typingResults")) || [];
-    const updated = Array.isArray(prevResults) ? [...prevResults, newResult] : [newResult];
+  const handleInput = (e) => {
+    const value = e.target.value;
 
-    localStorage.setItem("typingResults", JSON.stringify(updated));
-    window.dispatchEvent(new Event("typingResultsUpdated")); // Add this line
+    if (mode === "timed" && testComplete) return;
 
-    console.log("✅ Saved:", newResult); // debug
-};
+    setTyped(value);
 
-
-
-    const finishChill = () => {
-        setIsActive(false)
-        saveResults()
-        setShowResults(true)
-    };
-
-    const restart = () => {
-        setInput("")
-        setWpm(0)
-        setStarttime(null)
-        setTimer(30)
-        setIsActive(false)
-        setAccuracy(0)
-        //random()
+    if (!testStarted && value.length > 0) {
+      setTestStarted(true);
     }
 
-    return (
-        <div>
-            {/* Mode toggle buttons */}
-            <div className="mb-4 mt-4 flex gap-3">
-                <button
-                    onClick={() => setMode("timed")}
-                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "timed" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
-                >
-                    Rush Mode
-                </button>
-                <button
-                    onClick={() => setMode("casual")}
-                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "casual" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`
-                    }
-                >
-                    Chill Mode
-                </button>
-            </div>
-            {mode === "timed" ? (
-                // Timed Mode UI
-                <>
-                    <div className="flex justify-between mb-2">
-                        <span><strong>Time left:</strong> {timer}s</span>
-                        <span><strong>WPM:</strong> {isNaN(wpm) ? 0 : wpm}</span>
-                        <span><strong>Accuracy:</strong> {isNaN(accuracy) ? 0 : accuracy}%</span>
-                    </div>
+    if (passage) {
+      const correctChars = value.split("").filter((char, i) => char === passage[i]).length;
+      const accuracy = value.length > 0 ? Math.round((correctChars / value.length) * 100) : 0;
+      const minutes = Math.max(stats.time / 60, 0.1);
+      const words = value.trim().split(/\s+/).length;
+      const wpm = Math.round(words / minutes);
 
-                    <Highlightedpsg passage={passage} userInput={input} />
+      setStats({ wpm: Math.max(0, wpm), accuracy, time: stats.time });
+    }
+  };
 
-                    <textarea
-                        className="w-full p-3 border rounded-lg mt-4"
-                        rows="3"
-                        value={input}
-                        onChange={handleChange}
-                        placeholder="Type here..."
-                        disabled={mode === "timed" && !isActive && starttime !== null && timer === 0}
-                    />
+  const handleReset = () => {
+    setTyped("");
+    setTestStarted(false);
+    setTestComplete(false);
+    setStats({ wpm: 0, accuracy: 0, time: 0 });
+    setTimeLeft(30);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    inputRef.current?.focus();
+  };
 
-                    <button onClick={restart}
-                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring cursor-pointer">
-                        Reset
-                    </button>
-                </>
-            ) : (
-                // Casual Mode UI
-                <>
-                    <div className="flex justify-between mb-2">
-                        <span><strong>WPM:</strong> {isNaN(wpm) ? 0 : wpm}</span>
-                        <span><strong>Accuracy:</strong> {isNaN(accuracy) ? 0 : accuracy}%</span>
-                    </div>
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    handleReset();
+  };
 
-                    <Highlightedpsg passage={passage} userInput={input} />
+  const isComplete = typed.length === passage.length && typed === passage;
 
-                    <textarea
-                        className="w-full p-3 border rounded-lg mt-4"
-                        rows="3"
-                        value={input}
-                        onChange={handleChange}
-                        placeholder="Type here..."
-                    />
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Mode Buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => handleModeChange("timed")}
+          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
+            mode === "timed"
+              ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/20"
+              : "bg-slate-700/50 text-slate-300 border border-slate-600/50 hover:bg-slate-700 hover:border-slate-500"
+          } focus:outline-none focus:ring-2 focus:ring-amber-400/50`}
+        >
+          Rush Mode
+        </button>
 
-                    <div className="mt-3 flex gap-3">
-                        <button onClick={finishChill} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring cursor-pointer">
-                            Finish
-                        </button>
-                        <button onClick={restart} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring cursor-pointer">
-                            Reset
-                        </button>
-                    </div>
-                </>
-            )}
+        <button
+          onClick={() => handleModeChange("casual")}
+          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
+            mode === "casual"
+              ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/20"
+              : "bg-slate-700/50 text-slate-300 border border-slate-600/50 hover:bg-slate-700 hover:border-slate-500"
+          } focus:outline-none focus:ring-2 focus:ring-amber-400/50`}
+        >
+          Chill Mode
+        </button>
+      </div>
+
+      {/* Stats Display */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        {mode === "timed" && (
+          <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 text-center hover:border-slate-600/50 transition-colors duration-300">
+            <div className="text-2xl sm:text-3xl font-bold text-cyan-400">{timeLeft}s</div>
+            <div className="text-xs text-slate-400 mt-1 uppercase tracking-wider">Time Left</div>
+          </div>
+        )}
+        <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 text-center hover:border-slate-600/50 transition-colors duration-300">
+          <div className="text-2xl sm:text-3xl font-bold text-amber-400">{stats.wpm}</div>
+          <div className="text-xs text-slate-400 mt-1 uppercase tracking-wider">WPM</div>
         </div>
-    );
+        <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 text-center hover:border-slate-600/50 transition-colors duration-300">
+          <div className="text-2xl sm:text-3xl font-bold text-emerald-400">{stats.accuracy}%</div>
+          <div className="text-xs text-slate-400 mt-1 uppercase tracking-wider">Accuracy</div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg h-1.5 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300"
+          style={{ width: `${passage ? (typed.length / passage.length) * 100 : 0}%` }}
+        />
+      </div>
+
+      {/* Typing Input */}
+      <textarea
+        ref={inputRef}
+        value={typed}
+        onChange={handleInput}
+        onFocus={() => setIsActive(true)}
+        onBlur={() => setIsActive(false)}
+        placeholder="Click here and start typing..."
+        className="w-full h-24 sm:h-28 bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-lg p-4 text-slate-100 placeholder-slate-500 font-mono text-sm sm:text-base resize-none focus:outline-none focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/20 transition-all duration-200"
+        disabled={!passage || (mode === "timed" && testComplete)}
+      />
+
+      {/* Footer Actions */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-slate-400">
+          {isComplete && <span className="text-emerald-400 font-semibold">✓ Perfect!</span>}
+          {typed.length > 0 && !isComplete && (
+            <span>
+              {typed.length} / {passage.length} characters
+            </span>
+          )}
+        </div>
+        <button
+          onClick={handleReset}
+          className="px-4 py-2 text-sm bg-slate-700/50 hover:bg-slate-700 text-slate-100 rounded-lg border border-slate-600/50 hover:border-slate-500 transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-400/50"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+  );
 }
-
-
-
-//add a delete history button
