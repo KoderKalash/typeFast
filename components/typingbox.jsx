@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Highlightedpsg from "./highlightpsg";
 
 
+
 //import random from "@/data/passage";
 export default function TypingBox({ passage }) {
     const textareaRef = useRef(null);
@@ -122,16 +123,16 @@ const saveResults = (override = null) => {
     return (
         <div>
             {/* Mode toggle buttons */}
-            <div className="mb-4 mt-4 flex gap-3">
+            <div className="mb-4 mt-4 flex gap-3 justify-center">
                 <button
                     onClick={() => setMode("timed")}
-                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "timed" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "timed" ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white" : "bg-gray-700 text-gray-300"}`}
                 >
                     Rush Mode
                 </button>
                 <button
                     onClick={() => setMode("casual")}
-                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "casual" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`
+                    className={`px-4 py-2 rounded cursor-pointer hover:outline focus:ring ${mode === "casual" ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white" : "bg-gray-700 text-gray-300"}`
                     }
                 >
                     Chill Mode
@@ -159,7 +160,7 @@ const saveResults = (override = null) => {
                     />
 
                     <button onClick={restart}
-                        className="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring cursor-pointer">
+                        className="mt-3 px-4 py-2 bg-white text-black rounded hover:bg-gray-300 focus:outline-none focus:ring cursor-pointer">
                         Reset
                     </button>
                 </>
@@ -186,7 +187,7 @@ const saveResults = (override = null) => {
                         <button onClick={finishChill} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring cursor-pointer">
                             Finish
                         </button>
-                        <button onClick={restart} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring cursor-pointer">
+                        <button onClick={restart} className="px-4 py-2 bg-white text-black rounded hover:bg-gray-300 focus:outline-none focus:ring cursor-pointer">
                             Reset
                         </button>
                     </div>

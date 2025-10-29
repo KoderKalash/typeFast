@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 
 export default function History() {
   const [results, setResults] = useState([]);
@@ -36,8 +37,8 @@ export default function History() {
     <div className="mt-6 p-4 border rounded-lg bg-gray-800">
       <div className="flex justify-between items-center mb-4">
       <h2 className="text-lg font-semibold mb-3">Past Results</h2>
-      <button onClick={clearResults} className="px-4 py-2 cursor-pointer bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring">
-        Delete History
+      <button onClick={clearResults} className="px-2 py-2 cursor-pointer bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring">
+        <Trash2 className="w-5 h-5" />
       </button>
       </div>
       
