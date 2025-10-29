@@ -38,7 +38,7 @@ export default function Display() {
                 <TypingBox passage={passage} />
                 <div className="mt-4 flex gap-2">
                     <button onClick={random} className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring hover:cursor-pointer">Next Para</button>
-                    <button onClick={() => navigator.clipboard.writeText(passage)} className="px-4 py-2 rounded border border-slate-200 dark:border-slate-700 hover:cursor-pointer">Copy Para</button>
+                    {/* <button onClick={() => navigator.clipboard.writeText(passage)} className="px-4 py-2 rounded border border-slate-200 dark:border-slate-700 hover:cursor-pointer">Copy Para</button> */}
                 </div>
             </div>
         </>

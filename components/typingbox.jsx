@@ -150,7 +150,7 @@ const saveResults = (override = null) => {
 
                     <textarea
                         ref={textareaRef}
-                        className="w-full p-3 border rounded-lg mt-4"
+                        className="w-full p-3 rounded-lg mt-4 bg-[#111111] outline-none focus:ring h-32"
                         rows="3"
                         value={input}
                         onChange={handleChange}
@@ -175,7 +175,7 @@ const saveResults = (override = null) => {
 
                     <textarea
                         ref={textareaRef}
-                        className="w-full p-3 border rounded-lg mt-4"
+                        className="w-full p-3 rounded-lg mt-4 bg-[#111111] outline-none focus:ring h-32"
                         rows="3"
                         value={input}
                         onChange={handleChange}
@@ -198,4 +198,4 @@ const saveResults = (override = null) => {
 
 
 
-//add a delete history button
+//make it so people can't copy paste into the typing box
