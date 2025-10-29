@@ -1,17 +1,24 @@
 //Simple list - expand later
 const Passages = [
-    "The quick brown fox jumps over the lazy dog.",
-    "Practice every day to turn small habits into real skills.",
-    "Typing fast requires rhythm, accuracy, and consistent practice.",
-    "Small improvements compound — type a little each day and watch yourself improve.",
-    "Focus on accuracy first; speed will follow naturally.",
-    "Every keystroke is feedback: learn from your mistakes and adjust.",
-    "Short bursts of focused practice are better than long distracted sessions.",
-    "Try new text types: quotes, code snippets, and real articles to vary training.",
-    "Keep your posture straight and your wrists relaxed while typing.",
-    "Set realistic goals and track progress to stay motivated.",
-    "A steady pace beats frantic typing; comfort leads to speed.",
-    "Repeat passages to measure real improvement over time."
+    "Typing faster isn't about rushing. It's about staying calm and consistent. Focus on accuracy and rhythm first, and speed will follow naturally.",
+
+    "Every programmer benefits from good typing habits. It saves time and mental effort in the long run. The less you think about your fingers, the more you can think about your code.",
+
+    "Practice every day, even if only for a few minutes. Small improvements add up over time. That’s how mastery quietly builds behind the scenes.",
+
+    "Mistakes are a normal part of learning. Each error helps you understand your weaknesses better. What matters is not perfection, but steady progress.",
+
+    "Typing is about flow and focus. When you stop looking at the keyboard, you start trusting your mind. That’s when true speed begins to form.",
+
+    "Discipline beats motivation every single time. You won’t always feel like practicing, but do it anyway. The results will show before you even notice them.",
+
+    "Typing isn’t a race against time. It’s a conversation between your thoughts and the screen. Learn to make that conversation smooth and effortless.",
+
+    "Your brain learns through repetition. Every correctly typed word strengthens a pattern. Over time, those patterns turn into muscle memory.",
+
+    "Even the fastest typists once struggled to hit the right keys. They simply kept practicing every single day. Persistence turns effort into instinct.",
+
+    "Good typing technique feels invisible. Your fingers glide, your mind stays clear, and your focus stays sharp. That’s when productivity truly feels effortless."
 ]
 
 export default Passages;

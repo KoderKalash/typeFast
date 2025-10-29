@@ -1,10 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Highlightedpsg from "./highlightpsg";
 
 
 //import random from "@/data/passage";
 export default function TypingBox({ passage }) {
+    const textareaRef = useRef(null);
     const [input, setInput] = useState("");
     const [starttime, setStarttime] = useState(null);
     const [wpm, setWpm] = useState(0);
@@ -16,6 +17,12 @@ export default function TypingBox({ passage }) {
     //mode toggle
     const [mode, setMode] = useState("timed");
 
+    useEffect(() => {
+        // Auto-focus textarea on mount and when mode changes
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+        }
+    }, [mode]);
 
     useEffect(() => {
         if (mode !== "timed") return;
@@ -53,19 +60,25 @@ export default function TypingBox({ passage }) {
     };
 
     const handleChange = (e) => {
+        const value = e.target.value;
+        // Start timer and set starttime BEFORE updating input
+        let newStartTime = starttime;
+        let newIsActive = isActive;
         if (!starttime && !isActive) {
-            setStarttime(Date.now()) //timer starts at the first input
-            setIsActive(true)
+            newStartTime = Date.now();
+            setStarttime(newStartTime); // timer starts at the first input
+            newIsActive = true;
+            setIsActive(true);
         }
-        if (mode === "timed" && (!isActive || timer === 0)) return; //block input when timer ends
-        setInput(e.target.value);
+        if (mode === "timed" && (!newIsActive || timer === 0)) return; // block input when timer ends
+        setInput(value);
 
-        //calculating wpm
-        const words = e.target.value.trim().split(" ").length
-        const minutes = (Date.now() - starttime) / 1000 / 60
-        setWpm(minutes > 0 ? Math.round(words / minutes) : 0)
+        // Calculate WPM using the correct starttime
+        const words = value.trim().split(" ").length;
+        const minutes = newStartTime ? ((Date.now() - newStartTime) / 1000 / 60) : 0;
+        setWpm(minutes > 0 ? Math.round(words / minutes) : 0);
 
-        setAccuracy(calculateAccuracy(e.target.value, passage));
+        setAccuracy(calculateAccuracy(value, passage));
     }
 
 const saveResults = (override = null) => {
@@ -136,6 +149,7 @@ const saveResults = (override = null) => {
                     <Highlightedpsg passage={passage} userInput={input} />
 
                     <textarea
+                        ref={textareaRef}
                         className="w-full p-3 border rounded-lg mt-4"
                         rows="3"
                         value={input}
@@ -160,6 +174,7 @@ const saveResults = (override = null) => {
                     <Highlightedpsg passage={passage} userInput={input} />
 
                     <textarea
+                        ref={textareaRef}
                         className="w-full p-3 border rounded-lg mt-4"
                         rows="3"
                         value={input}
